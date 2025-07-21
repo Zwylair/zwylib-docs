@@ -88,7 +88,7 @@ def register_commands():
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
 
-Также остается поддержка множеств аргументов `*args` и `*kwargs`:
+Также остается поддержка множеств аргументов `*args` и `**kwargs`:
 
 ```python
 def register_commands():
@@ -102,7 +102,7 @@ def register_commands():
 
 ## Перехват ошибок
 
-При обработке срабатывания (саб)команды или в ее теле может произойти исключение, и его можно перехватить, зарегистрировав обработчик через декоратор `@command.register_error_handler`. Пример:
+При обработке срабатывания (саб)команды или в ее теле может произойти исключение, и его можно перехватить, зарегистрировав обработчик через декоратор `@command.register_error_handler`. Например:
 
 ```python
 def register_commands():
@@ -121,7 +121,7 @@ def register_commands():
 
 Декоратор `@command.register_error_handler` требует, чтобы в функции были фиксированно 3 обязательных аргумента: `param`, `account`, `exception`. Иначе ZwyLib не сможет зарегистрировать обработчик.
 
-Если во время срабатывания команды в ее теле случится исключение, которое не будет перехвачено ZwyLib автоматически отправит сообщение со стактрейсом в чат. 
+Если во время срабатывания команды в ее теле случится исключение, которое не будет перехвачено ZwyLib автоматически отправит сообщение со стактрейсом в чат.
 
 ## Дерегистрация команд
 
@@ -146,25 +146,29 @@ zwylib.command_manager: CommandManager
 
 #### `.get_dispatcher(plugin_id: str, prefix="default", commands_priority=-1) -> Dispatcher`
 
-Создаёт (если нужно) и возвращает `Dispatcher` для данного `plugin_id`.
-
-`plugin_id` (`str`): Айди плагина, для которого будет получен диспатчер.
-`prefix` (`str`): Префикс для всех команд указанного плагина. Значение `default` будет означать префикс по умолчанию `.`.
-`commands_priority` (`int`): Приоритет срабатывания диспатчера.
-
 ```python
 dispatcher = command_manager.get_dispatcher(__id__)
 ```
 
+Создаёт (если нужно) и возвращает `Dispatcher` для данного `plugin_id`.
+
+##### Аргументы:
+
+* `plugin_id` (`str`): Айди плагина, для которого будет получен диспатчер.
+* `prefix` (`str`): Префикс для всех команд указанного плагина. Значение `default` будет означать префикс по умолчанию `.`.
+* `commands_priority` (`int`): Приоритет срабатывания диспатчера.
+
 #### `.remove_dispatcher(plugin_id: str)`
-
-Убирает диспатчер для указанного плагина.
-
-`plugin_id` (`str`): Айди плагина, для которого будет убран диспатчер.
 
 ```python
 command_manager.remove_dispatcher(__id__)
 ```
+
+Убирает диспатчер для указанного плагина.
+
+##### Аргументы:
+
+* `plugin_id` (`str`): Айди плагина, для которого будет убран диспатчер.
 
 ## `zwylib.Dispatcher`
 
@@ -178,22 +182,17 @@ zwylib.command_manager.get_dispatcher(__id__): Dispatcher
 
 #### `.set_prefix(prefix: str)`
 
-Присваивает указанных префикс всем командам данного `plugin_id`.
-
-`prefix` (`str`): Префикс для всех команд указанного плагина.
-
 ```python
 dispatcher.set_prefix("/")
 ```
 
+Присваивает указанный префикс всем командам данного `plugin_id`.
+
+##### Аргументы:
+
+* `prefix` (`str`): Префикс для всех команд указанного плагина.
+
 #### `@dispatcher.register_command(name: str)`
-
-Декоратор, регистрирующий команду. Аргументы `params` и `account` обязательны для регистрации команды. Требует `HookResult` как типа возвращаемого объекта.
-
-`name` (`str`):  Название команды. Не должно быть пустым или содержать пробелы.
-
-выбрасывает `MissingRequiredArguments` если функция не имеет аргументов `param` и `account`.
-выбрасывает `InvalidTypeError` Если аргументы функции имеют любой тип кроме `str`, `int`, `float`, `bool`, `Any`, `Union` или `Optional`, или возвращаемый тип не является `HookResult`.
 
 ```python
 @dispatcher.register_command("hello")
@@ -201,3 +200,14 @@ def test_command(params: Any, account: int) -> HookResult:
     params.message = "Hi!"
     return HookResult(strategy=HookStrategy.MODIFY, params=params)
 ```
+
+Декоратор, регистрирующий команду. Аргументы `params` и `account` обязательны для регистрации команды. Требует `HookResult` как типа возвращаемого объекта.
+
+##### Аргументы:
+
+* `name` (`str`):  Название команды. Не должно быть пустым или содержать пробелы.
+
+##### Выбрасывает:
+
+* `MissingRequiredArguments` если функция не имеет аргументов `param` и `account`.
+* `InvalidTypeError` Если аргументы функции имеют любой тип кроме `str`, `int`, `float`, `bool`, `Any`, `Union` или `Optional`, или возвращаемый тип не является `HookResult`.
