@@ -26,11 +26,15 @@ def register_commands():
 
 class MyPlugin(BasePlugin):
     def on_plugin_load(self):
-        # регистрируем в on_plugin_load, потому что при выключенном
-        # плагине команды автоматически дерегистрируются
+        # регистрируем команды
         register_commands()
 
-        ...  # остальная логика плагина
+    def on_plugin_unload(self):
+        # при выключении плагина нужно дерегистрировать команды
+        # для избежания проблем при обновлении и валидации плагина
+        zwylib.command_manager.remove_dispatcher(__id__)
+
+    ...  # остальная логика плагина
 ```
 
 Аргументы `params` и `account` обязательны, ZwyLib выбросит исключение `MissingRequiredArguments` при регистрации команды, в которой будут отсутствовать эти аргументы.
@@ -44,11 +48,9 @@ ZwyLib позволяет регистрировать сколько угодн
 # ... метаданные и импорт zwylib ...
 
 def register_commands():
-    prefix = "!"
-    commands_priority = 10
-    dispatcher = zwylib.command_manager.get_dispatcher(__id__, prefix, commands_priority)
+    dispatcher = zwylib.command_manager.get_dispatcher(__id__, "!")
 
-
+    # команда будет вызываться как "!test"
     @dispatcher.register_command("test")
     def test_command(params: Any, account: int) -> HookResult:
         ...
@@ -70,17 +72,19 @@ def register_commands():
 
 ## Аргументы
 
-ZwyLib автоматически считывает отправляемое сообщение и парсит аргументы. Если в команде указаны дополнительные аргументы помимо требуемых (`param`, `account`) и к ним указаны типы (поддерживаются примитивные `str`, `int`, `float`, `bool`, и простые `Any`, `Union`, `Optional` из модуля `typing`), ZwyLib автоматически распарсит и приведет к требуемому типу все аргументы. При ошибке в приведении к типу будет выброшен `zwylib.CannotCastError`, а при несовпадении количества требуемых аргументов и полученных будет выброшен `zwylib.WrongArgumentAmountError`.
+ZwyLib автоматически считывает отправляемое сообщение и парсит аргументы.
+
+Если в команде указаны дополнительные аргументы помимо требуемых (`param`, `account`) и к ним указаны типы (поддерживаются примитивные `str`, `int`, `float`, `bool`, и простые `Any`, `Union`, `Optional` из модуля [`typing`](https://docs.python.org/3/library/typing.html)), ZwyLib автоматически распарсит и приведет к требуемым типам все аргументы.
+
+> Для успешного приведения агрумента к `bool` входное значение должно быть одним из `true`, `1`, `yes`, `on` для `True`, и `false`, `0`, `no`, `off` для `False`
+
+При ошибке в приведении к типу будет выброшен `zwylib.CannotCastError`, а при несовпадении количества требуемых аргументов и полученных будет выброшен `zwylib.WrongArgumentAmountError`.
 
 Пример автоприведения типов аргументов в команде:
 
 ```python
 def register_commands():
-    dispatcher = zwylib.command_manager.get_dispatcher(
-        __id__,
-        prefix="!",
-        commands_priority=10
-    )
+    dispatcher = zwylib.command_manager.get_dispatcher(...)
 
     @dispatcher.register_command("number")
     def number_command(params: Any, account: int, number: int) -> HookResult:
@@ -88,7 +92,7 @@ def register_commands():
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
 
-Также остается поддержка множеств аргументов `*args` и `**kwargs`:
+Также поддерживаются множество аргументов `*args`:
 
 ```python
 def register_commands():
@@ -102,7 +106,7 @@ def register_commands():
 
 ## Перехват ошибок
 
-При обработке срабатывания (саб)команды или в ее теле может произойти исключение, и его можно перехватить, зарегистрировав обработчик через декоратор `@command.register_error_handler`. Например:
+Во время обработки срабатывания (саб)команды или во время исполнении кода в ее теле может произойти исключение, и его можно перехватить, зарегистрировав обработчик через декоратор `@command.register_error_handler`:
 
 ```python
 def register_commands():
@@ -144,31 +148,50 @@ zwylib.command_manager: CommandManager
 
 ### Методы
 
-#### `.get_dispatcher(plugin_id: str, prefix="default", commands_priority=-1) -> Dispatcher`
+#### `get_dispatcher`
 
 ```python
-dispatcher = command_manager.get_dispatcher(__id__)
+CommandManager.get_dispatcher(
+    plugin_id: str,
+    prefix="default",  # "."
+    commands_priority=-1
+) -> Dispatcher
 ```
 
-Создаёт (если нужно) и возвращает `Dispatcher` для данного `plugin_id`.
+Создает (если нужно) и возвращает `Dispatcher` для данного `plugin_id`.
 
-##### Аргументы:
+##### Аргументы
 
 * `plugin_id` (`str`): Айди плагина, для которого будет получен диспатчер.
 * `prefix` (`str`): Префикс для всех команд указанного плагина. Значение `default` будет означать префикс по умолчанию `.`.
-* `commands_priority` (`int`): Приоритет срабатывания диспатчера.
+* `commands_priority` (`int`): Приоритет срабатывания диспатчера. Значение по умолчанию `-1`
 
-#### `.remove_dispatcher(plugin_id: str)`
+
+##### Пример
 
 ```python
-command_manager.remove_dispatcher(__id__)
+zwylib.command_manager.get_dispatcher("MyPluginID", "!", 10)
+```
+
+---
+
+#### `remove_dispatcher`
+
+```python
+CommandManager.remove_dispatcher(plugin_id: str)
 ```
 
 Убирает диспатчер для указанного плагина.
 
-##### Аргументы:
+##### Аргументы
 
 * `plugin_id` (`str`): Айди плагина, для которого будет убран диспатчер.
+
+##### Пример
+
+```python
+zwylib.command_manager.remove_dispatcher(__id__)
+```
 
 ## `zwylib.Dispatcher`
 
@@ -176,23 +199,48 @@ command_manager.remove_dispatcher(__id__)
 zwylib.command_manager.get_dispatcher(__id__): Dispatcher
 ```
 
-Класс, получаемый при вызове `command_manager.get_dispatcher` и управляющий командами определенного плагина. Должен быть использован только для использования указанных методов и получен только вследствии вызова `command_manager.get_dispatcher`.
+Класс, получаемый при вызове [`zwylib.command_manager.get_dispatcher`](/commands#get_dispatcher) и управляющий командами определенного плагина. Должен быть использован только для использования указанных методов и получен только вследствии вызова [`zwylib.command_manager.get_dispatcher`](/commands#get_dispatcher).
 
 ### Методы
 
-#### `.set_prefix(prefix: str)`
+#### `set_prefix`
+
+```python
+dispatcher.set_prefix(prefix: str)
+```
+
+Присваивает указанный префикс всем командам данного `plugin_id`.
+
+##### Аргументы
+
+* `prefix` (`str`): Префикс для всех команд указанного плагина.
+
+##### Пример
 
 ```python
 dispatcher.set_prefix("/")
 ```
 
-Присваивает указанный префикс всем командам данного `plugin_id`.
+---
 
-##### Аргументы:
+#### `@dispatcher.register_command`
 
-* `prefix` (`str`): Префикс для всех команд указанного плагина.
+```python
+@dispatcher.register_command(name: str)
+```
 
-#### `@dispatcher.register_command(name: str)`
+Декоратор, регистрирующий команду. Аргументы `params` и `account` обязательны для регистрации команды. Требует `HookResult` как тип возвращаемого объекта.
+
+##### Аргументы
+
+* `name` (`str`): Название команды. Не должно быть пустым или содержать пробелы.
+
+##### Выбрасывает
+
+* `MissingRequiredArguments` если функция не имеет аргументов `param` и `account`.
+* `InvalidTypeError` Если аргументы функции имеют любой тип кроме `str`, `int`, `float`, `bool`, `Any`, `Union` или `Optional`, или возвращаемый тип не является `HookResult`.
+
+##### Пример
 
 ```python
 @dispatcher.register_command("hello")
@@ -200,14 +248,3 @@ def test_command(params: Any, account: int) -> HookResult:
     params.message = "Hi!"
     return HookResult(strategy=HookStrategy.MODIFY, params=params)
 ```
-
-Декоратор, регистрирующий команду. Аргументы `params` и `account` обязательны для регистрации команды. Требует `HookResult` как типа возвращаемого объекта.
-
-##### Аргументы:
-
-* `name` (`str`):  Название команды. Не должно быть пустым или содержать пробелы.
-
-##### Выбрасывает:
-
-* `MissingRequiredArguments` если функция не имеет аргументов `param` и `account`.
-* `InvalidTypeError` Если аргументы функции имеют любой тип кроме `str`, `int`, `float`, `bool`, `Any`, `Union` или `Optional`, или возвращаемый тип не является `HookResult`.
