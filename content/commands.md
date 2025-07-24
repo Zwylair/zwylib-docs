@@ -72,21 +72,24 @@ def register_commands():
 
 ZwyLib automatically parses the message text and attempts to match parameters based on function arguments.
 
-If a command function includes additional typed parameters beyond the required `params` and `account`, ZwyLib will try to parse and cast arguments to the expected types. Supported types include: `str`, `int`, `float`, `bool`, and generic `Any`, `Union`, `Optional` from [`typing`](https://docs.python.org/3/library/typing.html).
+The function must have required `params` and `account` parameters and if a command function includes additional typed parameters, ZwyLib will try to parse and cast arguments to the expected types. Supported types include: `str`, `int`, `float`, `bool`, and generic `Any`, `Union`, `Optional` from the `typing` module (see [Python typing documentation](https://docs.python.org/3/library/typing.html)).
 
-> For correct boolean conversion, values like `true`, `1`, `yes`, `on` map to `True`, and `false`, `0`, `no`, `off` map to `False`.
+> **Note**: For boolean conversion, values like `true`, `1`, `yes`, `on` map to `True`, and `false`, `0`, `no`, `off` map to `False`.
 
-If casting fails, a `CannotCastError` is thrown. If the number of provided arguments is less than the required (non-variadic) arguments in the function’s signature, a `WrongArgumentAmountError` is raised.
+If casting fails, a `CannotCastError` is raised. If the number of provided arguments is less than the required (non-Optional, non-default, non-variadic) arguments or more than the expected arguments (when no variadic arguments are present), a `WrongArgumentAmountError` is raised. Arguments annotated as `Optional[T]` (or `Union[T, None]`) or with a default value (e.g., `arg: str = None`) are automatically assigned `None` or their default value if no value is provided.
 
-ZwyLib also supports variadic arguments (`*args`), which must be annotated as `*args: T`, where `T` is one of the supported types (`str`, `int`, `float`, `bool`, `Any`, or a `Union` of these types). ZwyLib collects these arguments into a `List[T]` passed to the command function:
+ZwyLib also supports variadic arguments (`*args`), which must be annotated as `*args: T`, where `T` is one of the supported types (`str`, `int`, `float`, `bool`, `Any`, or a `Union` of these types). Variadic arguments are passed as a tuple to the command function:
+- If no extra arguments are provided, `*args` is an empty tuple `()`.
+- If one extra argument is provided, `*args` is a single-item tuple `(arg,)`.
+- If multiple extra arguments are provided, `*args` is a tuple of all extra arguments `(arg1, arg2, ...)`.
 
-- If no extra arguments are provided, `*args` is an empty list (`[]`).
-- If one extra argument is provided, `*args` is a single-item list (`[arg]`).
-- If multiple extra arguments are provided, `*args` is a list of all extra arguments (`[arg1, arg2, ...]`).
+### Examples
 
-Example with a required argument and variadic arguments:
+#### Example 1: Required and Variadic Arguments
 
 ```python
+from typing import Union
+
 def register_commands():
     dispatcher = zwylib.command_manager.get_dispatcher(...)
 
@@ -96,27 +99,69 @@ def register_commands():
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
 
-- Command `.numbers 42` → `first = 42`, `args = []`
-- Command `.numbers 42 100` → `first = 42`, `args = [100]`
-- Command `.numbers 42 100 200 300` → `first = 42`, `args = [100, 200, 300]`
+- `!numbers 42` → `first = 42`, `args = ()` → Output: `First: 42, additional numbers: ()`
+- `!numbers 42 100` → `first = 42`, `args = (100,)` → Output: `First: 42, additional numbers: (100,)`
+- `!numbers 42 100 200 300` → `first = 42`, `args = (100, 200, 300)` → Output: `First: 42, additional numbers: (100, 200, 300)`
+- `!numbers` → Error: `Expected at least 3 arguments, got 2`
 
-Example with only variadic arguments:
+#### Example 2: Optional Argument
 
 ```python
+from typing import Optional
+
+def register_commands():
+    dispatcher = zwylib.command_manager.get_dispatcher(...)
+
+    @dispatcher.register_command("test")
+    def test_command(params: Any, account: int, option: Optional[str]) -> HookResult:
+        params.message = f"Option: {option}"
+        return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
+```
+
+- `!test hello 123` → `account = 123`, `option = None` → Output: `Option: None`
+- `!test hello 123 abc` → `account = 123`, `option = "abc"` → Output: `Option: abc`
+- `!test hello` → Error: `Expected at least 2 arguments, got 1`
+- `!test hello 123 abc def` → Error: `Expected at most 3 arguments, got 4`
+
+#### Example 3: Optional Argument with Default Value
+
+```python
+from typing import Optional
+
+def register_commands():
+    dispatcher = zwylib.command_manager.get_dispatcher(...)
+
+    @dispatcher.register_command("test")
+    def test_command(params: Any, account: int, option: Optional[str] = None) -> HookResult:
+        params.message = f"Option: {option}"
+        return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
+```
+
+- `!test hello 123` → `account = 123`, `option = None` → Output: `Option: None`
+- `!test hello 123 abc` → `account = 123`, `option = "abc"` → Output: `Option: abc`
+- `!test hello` → Error: `Expected at least 2 arguments, got 1`
+- `!test hello 123 abc def` → Error: `Expected at most 3 arguments, got 4`
+
+#### Example 4: Only Variadic Arguments
+
+```python
+from typing import Union
+
 def register_commands():
     dispatcher = zwylib.command_manager.get_dispatcher(...)
 
     @dispatcher.register_command("echo")
     def echo_command(params: Any, account: int, *args: Union[str, int]) -> HookResult:
-        params.message = f"Echo: {args}"
+        params.message = f"Echo: {list(args)}"
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
 
-- Command `.echo` → `args = []`
-- Command `.echo hello` → `args = ["hello"]`
-- Command `.echo hello 42` → `args = ["hello", 42]`
+- `!echo` → `args = ()` → Output: `Echo: []`
+- `!echo hello` → `args = ('hello',)` → Output: `Echo: ['hello']`
+- `!echo hello 42` → `args = ('hello', 42)` → Output: `Echo: ['hello', 42]`
 
-If the `*args` parameter’s type is not one of the supported types or a valid `Union` of supported types, an `InvalidTypeError` will be raised during command registration.
+If the `*args` parameter's type or any argument type is not one of the supported types or a valid `Union`/`Optional` of supported types, an `InvalidTypeError` is raised during command registration.
+
 
 ## Error Handling
 
