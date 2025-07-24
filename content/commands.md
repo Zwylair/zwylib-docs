@@ -76,31 +76,51 @@ If a command function includes additional typed parameters beyond the required `
 
 > For correct boolean conversion, values like `true`, `1`, `yes`, `on` map to `True`, and `false`, `0`, `no`, `off` map to `False`.
 
-If casting fails, a `CannotCastError` is thrown. If the number of provided arguments doesn’t match the function’s signature, a `WrongArgumentAmountError` is raised.
+If casting fails, a `CannotCastError` is thrown. If the number of provided arguments is less than the required (non-variadic) arguments in the function’s signature, a `WrongArgumentAmountError` is raised.
 
-Example:
+ZwyLib also supports variadic arguments (`*args`), which **must be** annotated as `List[T]` where `T` is one of the supported types (`str`, `int`, `float`, `bool`, `Any`). The `*args` parameter collects all remaining arguments after the required ones:
+
+- If no extra arguments are provided, `*args` is an empty list (`[]`).
+- If one extra argument is provided, `*args` is a single-item list (`[arg]`).
+- If multiple extra arguments are provided, `*args` is a list of all extra arguments (`[arg1, arg2, ...]`).
+
+Example with a required argument and variadic arguments:
 
 ```python
+from typing import List
+
 def register_commands():
     dispatcher = zwylib.command_manager.get_dispatcher(...)
 
-    @dispatcher.register_command("number")
-    def number_command(params: Any, account: int, number: int) -> HookResult:
-        params.message = f"Parameter type of 'number' is {type(number)}"  # <class 'int'>
+    @dispatcher.register_command("numbers")
+    def numbers_command(params: Any, account: int, first: int, *args: List[int]) -> HookResult:
+        params.message = f"First: {first}, additional numbers: {args}"
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
 
-Also supports variadic arguments (`*args`):
+- Command `.numbers 42` → `first = 42`, `args = []`
+- Command `.numbers 42 100` → `first = 42`, `args = [100]`
+- Command `.numbers 42 100 200 300` → `first = 42`, `args = [100, 200, 300]`
+
+Example with only variadic arguments:
 
 ```python
+from typing import List
+
 def register_commands():
     dispatcher = zwylib.command_manager.get_dispatcher(...)
 
-    @dispatcher.register_command("number")
-    def number_command(params: Any, account: int, number: int, *args) -> HookResult:
-        params.message = f"number: {type(number)}, args: {args}"
+    @dispatcher.register_command("echo")
+    def echo_command(params: Any, account: int, *args: List[str]) -> HookResult:
+        params.message = f"Echo: {args}"
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
+
+- Command `.echo` → `args = []`
+- Command `.echo hello` → `args = ["hello"]`
+- Command `.echo hello world` → `args = ["hello", "world"]`
+
+If the `*args` parameter is not annotated as `List[T]` or the inner type `T` is not one of the supported types, an `InvalidTypeError` will be raised during command registration.
 
 ## Error Handling
 
