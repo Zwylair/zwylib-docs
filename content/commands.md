@@ -78,7 +78,7 @@ If a command function includes additional typed parameters beyond the required `
 
 If casting fails, a `CannotCastError` is thrown. If the number of provided arguments is less than the required (non-variadic) arguments in the function’s signature, a `WrongArgumentAmountError` is raised.
 
-ZwyLib also supports variadic arguments (`*args`), which **must be** annotated as `List[T]` where `T` is one of the supported types (`str`, `int`, `float`, `bool`, `Any`). The `*args` parameter collects all remaining arguments after the required ones:
+ZwyLib also supports variadic arguments (`*args`), which must be annotated as `*args: T`, where `T` is one of the supported types (`str`, `int`, `float`, `bool`, `Any`, or a `Union` of these types). ZwyLib collects these arguments into a `List[T]` passed to the command function:
 
 - If no extra arguments are provided, `*args` is an empty list (`[]`).
 - If one extra argument is provided, `*args` is a single-item list (`[arg]`).
@@ -87,13 +87,11 @@ ZwyLib also supports variadic arguments (`*args`), which **must be** annotated a
 Example with a required argument and variadic arguments:
 
 ```python
-from typing import List
-
 def register_commands():
     dispatcher = zwylib.command_manager.get_dispatcher(...)
 
     @dispatcher.register_command("numbers")
-    def numbers_command(params: Any, account: int, first: int, *args: List[int]) -> HookResult:
+    def numbers_command(params: Any, account: int, first: int, *args: int) -> HookResult:
         params.message = f"First: {first}, additional numbers: {args}"
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
@@ -105,22 +103,20 @@ def register_commands():
 Example with only variadic arguments:
 
 ```python
-from typing import List
-
 def register_commands():
     dispatcher = zwylib.command_manager.get_dispatcher(...)
 
     @dispatcher.register_command("echo")
-    def echo_command(params: Any, account: int, *args: List[str]) -> HookResult:
+    def echo_command(params: Any, account: int, *args: Union[str, int]) -> HookResult:
         params.message = f"Echo: {args}"
         return HookResult(strategy=HookStrategy.MODIFY_FINAL, params=params)
 ```
 
 - Command `.echo` → `args = []`
 - Command `.echo hello` → `args = ["hello"]`
-- Command `.echo hello world` → `args = ["hello", "world"]`
+- Command `.echo hello 42` → `args = ["hello", 42]`
 
-If the `*args` parameter is not annotated as `List[T]` or the inner type `T` is not one of the supported types, an `InvalidTypeError` will be raised during command registration.
+If the `*args` parameter’s type is not one of the supported types or a valid `Union` of supported types, an `InvalidTypeError` will be raised during command registration.
 
 ## Error Handling
 
