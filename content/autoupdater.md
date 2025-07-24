@@ -1,25 +1,25 @@
-# Автообновление
+# Auto-update
 
-ZwyLib предоставляет разработчикам плагинов возможность автообновления их плагинов. Однако, тайм-аут между проверками обновлений регулируется лишь в настройках плагина ZwyLib. Чтобы включить автообновление для своего плагина, нужно:
+ZwyLib provides plugin developers with the ability to enable auto-updating for their plugins. However, the timeout between update checks is controlled only in the ZwyLib plugin settings. To enable auto-update for your plugin, you need to:
 
-1. Сделать пост в каком-нибудь публичном канале с файлом-плагином, который ZwyLib будет скачивать;
-2. Добавить задание в автообновлятор ZwyLib:
+1. Make a post in any public channel containing the plugin file that ZwyLib will download;
+2. Add a task to the ZwyLib auto-updater:
 
 ```python
-# ... метаданные и импорт zwylib ...
+# ... metadata and zwylib import ...
 
 class MyPlugin(BasePlugin):
     def on_plugin_load(self):
-    	update_channel_id = 123456789  # айди канала, где лежит пост
-    	update_message_id = 11  # айди сообщения с файлом-плагином
+        update_channel_id = 123456789  # ID of the channel where the post is located
+        update_message_id = 11  # ID of the message with the plugin file
 
-    	# добавляем задание
+        # add the task
         zwylib.add_autoupdater_task(__id__, update_channel_id, update_message_id)
 
-        ...  # остальная логика плагина
+        ...  # other plugin logic
 ```
 
-Также, если вы хотите сделать автообновление опциональным, или вам просто в какой-то момент понадобится убрать задачу, вы можете использовать метод `remove_autoupdater_task`:
+Also, if you want to make auto-update optional, or you simply need to remove the task at some point, you can use the `remove_autoupdater_task` method:
 
 ```python
 zwylib.remove_autoupdater_task(__id__)

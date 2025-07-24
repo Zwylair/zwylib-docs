@@ -1,8 +1,8 @@
-# Утилиты
+# Utilities
 
-## Логгирование и уведомления
+## Logging and Notifications
 
-Для удобства и стандартизации вывода логов и всплывающих уведомлений ZwyLib предоставляет вспомогательные утилиты: `build_log` и `build_bulletin_helper`.
+To simplify and standardize logging and notification behavior, ZwyLib provides helper utilities: `build_log` and `build_bulletin_helper`.
 
 ### `zwylib.build_log`
 
@@ -13,18 +13,18 @@ zwylib.build_log(
 ) -> logging.Logger
 ```
 
-Создаёт логгер [`logging.Logger`](https://docs.python.org/3/library/logging.html) с указанным префикса и уровнем логирования. Автоматически добавляет в выводимое сообщение указанный префикс и название функции, в которой произведен вызов.
+Creates a [`logging.Logger`](https://docs.python.org/3/library/logging.html) instance with the given prefix and logging level. Automatically includes the plugin prefix and the caller function name in every log message.
 
-#### Аргументы
+#### Arguments
 
-* `plugin_name` (`str`): имя плагина, префикс, будет отображаться в логах.
-* `level` (`int`, опционально): уровень логирования. По умолчанию `logging.INFO`.
+* `plugin_name` (`str`): Plugin name, used as prefix in logs.
+* `level` (`int`, optional): Logging level (e.g., `DEBUG`, `INFO`). Default is `logging.INFO`.
 
-#### Возвращает
+#### Returns
 
-* [`logging.Logger`](https://docs.python.org/3/library/logging.html) — экземпляр логгера, через который можно логировать информацию.
+* [`logging.Logger`](https://docs.python.org/3/library/logging.html): Logger instance for structured logging.
 
-#### Пример
+#### Example
 
 ```python
 logger = zwylib.build_log("MyPluginLogger")
@@ -32,9 +32,9 @@ logger = zwylib.build_log("MyPluginLogger")
 # ...
 
 class MyPlugin(BasePlugin):
-	def on_plugin_unload(self):
-		logger.error("Ошибка при выполнении", "код 42")
-		# [MyPluginLogger] [on_plugin_unload] Ошибка при выполнении код 42
+    def on_plugin_unload(self):
+        logger.error("Execution failed", "code 42")
+        # [MyPluginLogger] [on_plugin_unload] Execution failed code 42
 ```
 
 ---
@@ -43,29 +43,28 @@ class MyPlugin(BasePlugin):
 
 ```python
 zwylib.build_bulletin_helper(
-    plugin_name: str,
-    level = logging.INFO
-) -> logging.Logger
+    prefix: str
+) -> BulletinHelper
 ```
 
-Фабрика, создающая расширенный класс [`BulletinHelper`](https://plugins.exteragram.app/docs/client-utils#displaying-bulletins-bottom-notifications), который автоматически добавляет указанный префикс во все Bulletin уведомления (информационные, ошибки, успех).
+Factory function that creates an extended [`BulletinHelper`](https://plugins.exteragram.app/docs/client-utils#displaying-bulletins-bottom-notifications) class, automatically prefixing all messages with the provided plugin name.
 
-#### Аргументы
+#### Arguments
 
-* `prefix` (`str`): префикс, который будет автоматически подставляться к каждому сообщению (обычно имя плагина).
+* `prefix` (`str`): Prefix to be prepended to all bulletin messages (usually the plugin name).
 
-#### Возвращает
+#### Returns
 
-* [`BulletinHelper`](https://plugins.exteragram.app/docs/client-utils#displaying-bulletins-bottom-notifications): расширенный класс с выводом префикса в уведомлениях.
+* `BulletinHelper`: Extended class with prefixed notification methods.
 
-#### Пример
+#### Example
 
 ```python
 bulletins = zwylib.build_bulletin_helper("MyPlugin")
-bulletins.show_info("что-то случилось")
+bulletins.show_info("something happened")
 ```
 
-## Вспомогательные классы
+## Helper Classes
 
 ### `zwylib.SingletonMeta`
 
@@ -73,11 +72,9 @@ bulletins.show_info("что-то случилось")
 class SingletonMeta(type)
 ```
 
-Метакласс для реализации [паттерна синглтон](https://refactoring.guru/design-patterns/singleton/python/example). Используется как метакласс при определении любого класса, который должен иметь единственный экземпляр.
+Metaclass implementing the [singleton pattern](https://refactoring.guru/design-patterns/singleton/python/example). Use it as the metaclass for any class that must have only one instance.
 
-При создании нового экземпляра класса с этим метаклассом, будет возвращён уже существующий, если он ранее создавался.
-
-#### Пример:
+#### Example
 
 ```python
 class MyManager(metaclass=SingletonMeta):
@@ -97,13 +94,13 @@ assert a is b  # True
 zwylib.Callback1(func: (Any) -> None)
 ```
 
-Класс-обёртка, позволяющий передавать Python-функции в Java-код, имитируя интерфейс [`Utilities.Callback`](https://github.com/DrKLO/Telegram/blob/master/TMessagesProj/src/main/java/org/telegram/messenger/Utilities.java#L519).
+Wrapper class allowing a Python function to be passed into Java code via Chaquopy, emulating the [`Utilities.Callback`](https://github.com/DrKLO/Telegram/blob/master/TMessagesProj/src/main/java/org/telegram/messenger/Utilities.java#L519) Java interface.
 
-#### Аргументы конструктора
+#### Constructor Arguments
 
-* `fn` (`Callable[[Any], None]`): Python-функция, принимающая один аргумент любого типа и ничего не возвращающая, которая будет вызвана при вызове `.run(...)` из Java-кода.
+* `fn` (`Callable[[Any], None]`): A Python function that accepts a single argument and returns nothing. Called from Java via `.run(...)`.
 
-#### Методы
+#### Methods
 
 ##### `run`
 
@@ -111,21 +108,19 @@ zwylib.Callback1(func: (Any) -> None)
 Callback1.run(arg: Any) -> None
 ```
 
-Метод, вызываемый со стороны Java-кода, пробрасывающий переданный аргумент в обёрнутую Python-функцию.
+Called from Java, forwards the provided argument to the Python function. Exceptions are logged internally and not raised.
 
-Автоматически логирует исключения, возникшие при вызове, без их выбрасывания.
-
-#### Пример
+#### Example
 
 ```python
 def my_python_callback(value):
-    print(f"Получено из Java: {value}")
+    print(f"Received from Java: {value}")
 
 callback = Callback1(my_python_callback)
 some_java_object.setCallback(callback)
 ```
 
-## Вспомогательные функции
+## Helper Functions
 
 ### `zwylib.is_zwylib_version_sufficient`
 
@@ -137,21 +132,21 @@ def is_zwylib_version_sufficient(
 ) -> bool
 ```
 
-Проверяет, соответствует ли текущая версия ZwyLib требуемой, указанной в `version`.
+Checks whether the current ZwyLib version is greater than or equal to the required `version`.
 
-Если версия недостаточна, и флаг `show_bulletin` установлен в `True`, пользователю будет показано всплывающее уведомление с кнопкой обновления на актуальную версию.
+If the version is insufficient and `show_bulletin` is `True`, a bulletin is shown with a button allowing the user to navigate to the update.
 
-#### Аргументы
+#### Arguments
 
-* `plugin_name` (`str`): Название плагина, которое будет выведено в сплывающем сообщении.
-* `version` (`str`): Минимально допустимая версия ZwyLib.
-* `show_bulletin` (`bool`, по умолчанию `True`): Нужно ли показывать уведомление при недостаточной версии.
+* `plugin_name` (`str`): Plugin name shown in the bulletin.
+* `version` (`str`): Minimum required ZwyLib version.
+* `show_bulletin` (`bool`, default `True`): Whether to show a bulletin on version mismatch.
 
-#### Возвращает
+#### Returns
 
-* `bool`: `True`, если текущая версия ZwyLib достаточна, `False` иначе.
+* `bool`: `True` if current ZwyLib version is sufficient, `False` otherwise.
 
-#### Пример
+#### Example
 
 ```python
 zwylib.is_zwylib_version_sufficient("MyPlugin", "1.2.0")
@@ -169,22 +164,22 @@ zwylib.get_message(
 )
 ```
 
-Асинхронно заставляет приложение получить сообщение из сервера, после чего извлекает его из локального хранилища и передаёт его в `callback`, когда сообщение появится.
+Asynchronously triggers a message reload from server, then fetches the message from local storage and passes it to the `callback` once available.
 
-#### Аргументы
+#### Arguments
 
-* `chat_id` (`int`): ID чата, в котором находится сообщение.
-* `message_id` (`int`): ID нужного сообщения.
-* `callback` (`Callable`): Функция, которая будет вызвана с найденным сообщением как аргумент. Получает объект `TL_message`, `TL_messageEmpty` или `None`.
+* `chat_id` (`int`): ID of the chat containing the message.
+* `message_id` (`int`): ID of the message.
+* `callback` (`Callable`): Function called with the message (or `None`) when found.
 
-#### Пример
+#### Example
 
 ```python
 def handle_msg(msg):
     if msg:
-        print("Получено сообщение:", msg.message)
+        print("Received message:", msg.message)
     else:
-        print("Сообщение не найдено")
+        print("Message not found")
 
 zwylib.get_message(chat_id=12345, message_id=67890, callback=handle_msg)
 ```

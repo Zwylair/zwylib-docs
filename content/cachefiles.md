@@ -1,4 +1,4 @@
-# Кеш-файлы
+# Cache Files
 
 ## `zwylib.CacheFile`
 
@@ -6,15 +6,15 @@
 zwylib.CacheFile(filename: str, read_on_init=True, compress=False)
 ```
 
-Класс для работы с кеш-файлом. Поддерживает автоматическое чтение, запись и сжатие данных. Используется для хранения простых данных.
+A class for working with a cache file. Supports automatic reading, writing, and optional compression. Used to store simple binary data.
 
-### Аргументы
+### Arguments
 
-* `filename` (`str`): Имя кеш-файла (например, `cache.bin`). Будет создан в подпапке `cache` директории плагина.
-* `read_on_init` (`bool`): Автоматически читать содержимое файла при создании объекта. По умолчанию `True`.
-* `compress` (`bool`): Использовать zlib-сжатие при чтении/записи. По умолчанию `False`.
+* `filename` (`str`): Name of the cache file (e.g., `cache.bin`). It will be created inside the plugin's `cache` subfolder.
+* `read_on_init` (`bool`): Automatically read the file contents on object creation. Defaults to `True`.
+* `compress` (`bool`): Use zlib compression when reading/writing. Defaults to `False`.
 
-### Методы
+### Methods
 
 #### `read()`
 
@@ -22,7 +22,7 @@ zwylib.CacheFile(filename: str, read_on_init=True, compress=False)
 CacheFile.read() -> None
 ```
 
-Читает содержимое файла и сохраняет в `self.content`. Если включено сжатие (`compress=True`), содержимое будет автоматически распаковано. При ошибке или отсутствии файла — `content` станет `None`.
+Reads the contents of the file and stores it in `self.content`. If compression is enabled (`compress=True`), the content is automatically decompressed. If an error occurs or the file is missing, `content` will be set to `None`.
 
 ---
 
@@ -32,7 +32,7 @@ CacheFile.read() -> None
 CacheFile.write() -> None
 ```
 
-Записывает текущее содержимое `self.content` в файл. Если включено сжатие, данные будут сжаты через [`zlib`](https://docs.python.org/3/library/zlib.html).
+Writes the current content of `self.content` to the file. If compression is enabled, the data will be compressed using [`zlib`](https://docs.python.org/3/library/zlib.html).
 
 ---
 
@@ -42,7 +42,7 @@ CacheFile.write() -> None
 CacheFile.wipe() -> None
 ```
 
-Очищает `self.content` (устанавливает в `None`) и сохраняет пустое значение в файл.
+Clears `self.content` (sets it to `None`) and writes an empty value to the file.
 
 ---
 
@@ -52,19 +52,19 @@ CacheFile.wipe() -> None
 CacheFile.delete() -> None
 ```
 
-Удаляет файл с диска, если он существует. Если нет прав доступа — логирует предупреждение, но не кидает исключение.
+Deletes the file from disk if it exists. If access is denied — logs a warning but does not throw an exception.
 
 ---
 
-### Свойства
+### Properties
 
 #### `content: Optional[bytes]`
 
-Содержимое. Чтение — возвращает `bytes` или `None`. Присваивание — принимает `bytes` или `None`.
+Contents of the cache. Reading returns `bytes` or `None`. Writing accepts `bytes` or `None`.
 
 ---
 
-### Пример
+### Example
 
 ```python
 cache = CacheFile("mycache.bin", compress=True)
@@ -78,25 +78,25 @@ cache.write()
 
 ```python
 zwylib.JsonCacheFile(
-	filename: str,
-	default: Any,
-	read_on_init=True,
-	compress=False
+    filename: str,
+    default: Any,
+    read_on_init=True,
+    compress=False
 )
 ```
 
-Дочерний класс [`zwylib.CacheFile`](/cachefiles#zwylibcachefile), сохраняющий JSON-совместимые структуры (словарь, список и т.д.). Автоматически сериализует и десериализует содержимое.
+A subclass of [`zwylib.CacheFile`](/cachefiles#zwylibcachefile) for storing JSON-compatible structures (dicts, lists, etc.). Automatically serializes and deserializes the content.
 
-### Аргументы
+### Arguments
 
-* `filename` (`str`): Имя кеш-файла.
-* `default` (`Any`): Значение, которое будет использоваться как начальное содержимое, если файл не найден или повреждён.
-* `read_on_init` (`bool`): Чтение содержимого при инициализации. По умолчанию `True`.
-* `compress` (`bool`): Использовать zlib-сжатие. По умолчанию `False`.
+* `filename` (`str`): Name of the cache file.
+* `default` (`Any`): Value to be used as initial content if the file is missing or corrupted.
+* `read_on_init` (`bool`): Whether to read contents on init. Defaults to `True`.
+* `compress` (`bool`): Whether to use zlib compression. Defaults to `False`.
 
 ---
 
-### Методы
+### Methods
 
 #### `read()`
 
@@ -104,7 +104,7 @@ zwylib.JsonCacheFile(
 JsonCacheFile.read() -> None
 ```
 
-Читает содержимое из файла, затем пытается распарсить JSON. Если файл невалидный или не декодируется — `content` сбрасывается в `default`.
+Reads contents from file and tries to parse it as JSON. If the file is invalid or not decodable — resets `content` to `default`.
 
 ---
 
@@ -114,7 +114,7 @@ JsonCacheFile.read() -> None
 JsonCacheFile.write() -> None
 ```
 
-Сериализует содержимое и записывает в файл как `utf-8`.
+Serializes content and writes it to file in UTF-8.
 
 ---
 
@@ -124,7 +124,7 @@ JsonCacheFile.write() -> None
 JsonCacheFile.wipe() -> None
 ```
 
-Сбрасывает `json_content` в `default` и сохраняет.
+Resets `json_content` to `default` and saves the file.
 
 ---
 
@@ -134,19 +134,19 @@ JsonCacheFile.wipe() -> None
 JsonCacheFile.delete() -> None
 ```
 
-Удаляет файл с диска, если он существует. Если нет прав доступа — логирует предупреждение, но не кидает исключение.
+Deletes the file from disk if it exists. If access is denied — logs a warning but does not throw an exception.
 
 ---
 
-### Свойства
+### Properties
 
 #### `content: Any`
 
-Чтение — возвращает текущее содержимое в виде Python-объекта (`dict`, `list` и т.п.). Если файл не был прочитан — возвращается `default`. Запись — принимает JSON-совместимый объект.
+Reading returns the current content as a Python object (`dict`, `list`, etc.). If the file was not read — returns `default`. Writing accepts any JSON-serializable object.
 
 ---
 
-### Пример
+### Example
 
 ```python
 default_value = {"last_run": "2025-07-21"}

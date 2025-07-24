@@ -1,20 +1,20 @@
-# Введение
+# Introduction
 
-ZwyLib — компактная плагин-библиотека, которая начиналась как часть других плагинов [канала разработчика](https://t.me/zwyPlugins), а теперь доступна всем, кому может быть полезна.
+**ZwyLib** is a compact plugin-library that originally started as part of various plugins from the [developer's channel](https://t.me/zwyPlugins), and is now available to anyone who might find it useful.
 
-## Начало работы
+## Getting Started
 
-Любые плагины, которые используют инструментарий ZwyLib сначала должны ее импортировать (предварительно ее нужно [установить](https://t.me/zwyPlugins/48)):
+Any plugin that wants to use ZwyLib's tools must first import it (after installing it via [this post](https://t.me/zwyPlugins/48)):
 
 ```python
 # __id__, __name__, ...
 
 try:
-    import zwylib  # импортируем библиотеку
+    import zwylib  # import the library
 except (ImportError, ModuleNotFoundError):
-    # zwylib не найден, а значит ее инструментарий использовать не получится. выбрасываем ошибку
-    raise Exception("Запуск без ZwyLib невозможен. Пожалуйста, установите ее.")
+    # zwylib not found — its tools cannot be used. raise an error
+    raise Exception("Cannot run without ZwyLib. Please install it.")
 
 class MyPlugin(BasePlugin):
-    ...  # логика вашего плагина
+    ...  # your plugin logic
 ```
