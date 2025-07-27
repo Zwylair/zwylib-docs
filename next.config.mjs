@@ -3,6 +3,7 @@ import nextra from 'nextra'
 // Set up Nextra with its configuration
 const withNextra = nextra({
   search: false,
+  defaultShowCopyCode: true
   // ... Add Nextra-specific options here
 })
  

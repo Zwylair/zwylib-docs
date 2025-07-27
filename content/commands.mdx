@@ -219,13 +219,13 @@ CommandManager.get_dispatcher(
 
 Creates (if necessary) and returns a `Dispatcher` instance for the given `plugin_id`.
 
-##### Parameters
+**Parameters**
 
 * `plugin_id` (`str`): Your plugin’s unique ID.
 * `prefix` (`str`): Prefix for all commands of this plugin. `"default"` means `"."`.
 * `commands_priority` (`int`): Execution priority. Default is `-1`.
 
-##### Example
+**Example**
 
 ```python
 zwylib.command_manager.get_dispatcher("MyPluginID", "!", 10)
@@ -241,11 +241,11 @@ CommandManager.remove_dispatcher(plugin_id: str)
 
 Removes the dispatcher associated with the given plugin.
 
-##### Parameters
+**Parameters**
 
 * `plugin_id` (`str`): ID of the plugin whose dispatcher is being removed.
 
-##### Example
+**Example**
 
 ```python
 zwylib.command_manager.remove_dispatcher(__id__)
@@ -269,11 +269,11 @@ dispatcher.set_prefix(prefix: str)
 
 Sets the prefix for all commands registered via this dispatcher.
 
-##### Parameters
+**Parameters**
 
 * `prefix` (`str`): New command prefix.
 
-##### Example
+**Example**
 
 ```python
 dispatcher.set_prefix("/")
@@ -291,16 +291,16 @@ Decorator to register a command.
 
 Arguments `params` and `account` are required. The return type must be `HookResult`.
 
-##### Parameters
+**Parameters**
 
 * `name` (`str`): Command name. Cannot be empty or contain spaces.
 
-##### Raises
+**Raises**
 
 * `MissingRequiredArguments`: If `params` or `account` are missing.
 * `InvalidTypeError`: If parameter types are unsupported or return type is not `HookResult`.
 
-##### Example
+**Example**
 
 ```python
 @dispatcher.register_command("hello")

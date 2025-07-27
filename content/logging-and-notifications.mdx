@@ -1,0 +1,327 @@
+# Logging and Notifications
+
+To simplify and standardize logging and notification behavior, ZwyLib provides helper utilities: `build_log` and `build_bulletin_helper`.
+
+## `zwylib.build_log`
+
+```python
+zwylib.build_log(
+    plugin_name: str,
+    level = logging.INFO
+) -> logging.Logger
+```
+
+Creates a `logging.Logger` instance with the given prefix and logging level. Automatically includes the plugin prefix and the caller function name in every log message.
+
+**Arguments**
+
+- `plugin_name` (`str`): Plugin name, used as prefix in logs.
+- `level` (`int`, optional): Logging level (e.g., `DEBUG`, `INFO`). Default is `logging.INFO`.
+
+**Returns**
+
+- `logging.Logger`: Logger instance for structured logging.
+
+**Example**
+
+```python
+logger = zwylib.build_log("MyPluginLogger")
+
+# ...
+
+class MyPlugin(BasePlugin):
+    def on_plugin_unload(self):
+        logger.error("Execution failed", "code 42")
+        # [MyPluginLogger] [on_plugin_unload] Execution failed code 42
+```
+
+## `zwylib.build_bulletin_helper`
+
+```python
+zwylib.build_bulletin_helper(
+    prefix: Optional[str] = None
+) -> InnerBulletinHelper
+```
+
+Factory function that creates an instance of `InnerBulletinHelper`, automatically prefixing all messages with the provided plugin name if specified.
+
+**Arguments**
+
+- `prefix` (`Optional[str]`, default `None`): Prefix to be prepended to all bulletin messages (usually the plugin name). If `None` or empty, no prefix is added.
+
+**Returns**
+
+- `InnerBulletinHelper`: Instance with prefixed notification methods.
+
+**Example**
+
+```python
+bulletins = zwylib.build_bulletin_helper("MyPlugin")
+bulletins.show_info("Something happened")
+# Displays: MyPlugin: Something happened
+```
+
+## `zwylib.InnerBulletinHelper`
+
+```python
+class InnerBulletinHelper(ui.bulletin.BulletinHelper)
+```
+
+Class extending [`ui.bulletin.BulletinHelper`](https://plugins.exteragram.app/docs/bulletin-helper) to provide prefixed notification methods for displaying bulletins with info, error, or success styles, including options for copy-to-clipboard and post-redirect functionality.
+
+**Constructor Arguments**
+
+- `prefix` (`str`): Prefix prepended to all bulletin messages (usually the plugin name). If empty or not provided, no prefix is added.
+
+### Methods
+
+#### `show_info`
+
+```python
+show_info(message: str, fragment: Optional[Any] = None) -> None
+```
+
+Displays an info-style bulletin with the prefixed message.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `fragment` (`Optional[Any]`, default `None`): Optional fragment context for the bulletin.
+
+**Example**
+
+```python
+bulletins = zwylib.build_bulletin_helper("MyPlugin")
+bulletins.show_info("Operation completed")
+# Displays: MyPlugin: Operation completed
+```
+
+---
+
+#### `show_error`
+
+```python
+show_error(message: str, fragment: Optional[Any] = None) -> None
+```
+
+Displays an error-style bulletin with the prefixed message.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `fragment` (`Optional[Any]`, default `None`): Optional fragment context for the bulletin.
+
+**Example**
+
+```python
+bulletins.show_error("Failed to load data")
+# Displays: MyPlugin: Failed to load data
+```
+
+---
+
+#### `show_success`
+
+```python
+show_success(message: str, fragment: Optional[Any] = None) -> None
+```
+
+Displays a success-style bulletin with the prefixed message.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `fragment` (`Optional[Any]`, default `None`): Optional fragment context for the bulletin.
+
+**Example**
+
+```python
+bulletins.show_success("Data saved successfully")
+# Displays: MyPlugin: Data saved successfully
+```
+
+---
+
+#### `show_with_copy`
+
+```python
+show_with_copy(message: str, text_to_copy: str, icon_res_id: int) -> None
+```
+
+Displays a bulletin with a copy button that copies the provided text to the clipboard.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `text_to_copy` (`str`): Text to be copied to the clipboard when the button is clicked.
+- `icon_res_id` (`int`): Resource ID for the bulletin icon.
+
+**Example**
+
+```python
+bulletins.show_with_copy("Copy this text", "example text", R.raw.info)
+# Displays: MyPlugin: Copy this text (with a copy button)
+```
+
+---
+
+#### `show_info_with_copy`
+
+```python
+show_info_with_copy(message: str, copy_text: str) -> None
+```
+
+Displays an info-style bulletin with a copy button.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `copy_text` (`str`): Text to be copied to the clipboard.
+
+**Example**
+
+```python
+bulletins.show_info_with_copy("Info message", "info text")
+# Displays: MyPlugin: Info message (with a copy button)
+```
+
+---
+
+#### `show_error_with_copy`
+
+```python
+show_error_with_copy(message: str, copy_text: str) -> None
+```
+
+Displays an error-style bulletin with a copy button.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `copy_text` (`str`): Text to be copied to the clipboard.
+
+**Example**
+
+```python
+bulletins.show_error_with_copy("Error occurred", "error details")
+# Displays: MyPlugin: Error occurred (with a copy button)
+```
+
+---
+
+#### `show_success_with_copy`
+
+```python
+show_success_with_copy(message: str, copy_text: str) -> None
+```
+
+Displays a success-style bulletin with a copy button.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `copy_text` (`str`): Text to be copied to the clipboard.
+
+**Example**
+
+```python
+bulletins.show_success_with_copy("Success!", "success details")
+# Displays: MyPlugin: Success! (with a copy button)
+```
+
+---
+
+#### `show_with_post_redirect`
+
+```python
+show_with_post_redirect(message: str, button_text: str, peer_id: int, message_id: int, icon_res_id: int = 0) -> None
+```
+
+Displays a bulletin with a button that redirects to a specific post in a chat.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `button_text` (`str`): Text for the redirect button.
+- `peer_id` (`int`): ID of the chat to redirect to.
+- `message_id` (`int`): ID of the message to redirect to.
+- `icon_res_id` (`int`, default `0`): Resource ID for the bulletin icon.
+
+**Example**
+
+```python
+bulletins.show_with_post_redirect("View post", "Go to post", -12345, 67890)
+# Displays: MyPlugin: View post (with a redirect button)
+```
+
+---
+
+#### `show_info_with_post_redirect`
+
+```python
+show_info_with_post_redirect(message: str, button_text: str, peer_id: int, message_id: int) -> None
+```
+
+Displays an info-style bulletin with a post-redirect button.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `button_text` (`str`): Text for the redirect button.
+- `peer_id` (`int`): ID of the chat to redirect to.
+- `message_id` (`int`): ID of the message to redirect to.
+
+**Example**
+
+```python
+bulletins.show_info_with_post_redirect("Info message", "View", -12345, 67890)
+# Displays: MyPlugin: Info message (with a redirect button)
+```
+
+---
+
+#### `show_error_with_post_redirect`
+
+```python
+show_error_with_post_redirect(message: str, button_text: str, peer_id: int, message_id: int) -> None
+```
+
+Displays an error-style bulletin with a post-redirect button.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `button_text` (`str`): Text for the redirect button.
+- `peer_id` (`int`): ID of the chat to redirect to.
+- `message_id` (`int`): ID of the message to redirect to.
+
+**Example**
+
+```python
+bulletins.show_error_with_post_redirect("Error occurred", "View details", -12345, 67890)
+# Displays: MyPlugin: Error occurred (with a redirect button)
+```
+
+---
+
+#### `show_success_with_post_redirect`
+
+```python
+show_success_with_post_redirect(message: str, button_text: str, peer_id: int, message_id: int) -> None
+```
+
+Displays a success-style bulletin with a post-redirect button.
+
+**Arguments**
+
+- `message` (`str`): The message to display.
+- `button_text` (`str`): Text for the redirect button.
+- `peer_id` (`int`): ID of the chat to redirect to.
+- `message_id` (`int`): ID of the message to redirect to.
+
+**Example**
+
+```python
+bulletins.show_success_with_post_redirect("Success!", "View post", -12345, 67890)
+# Displays: MyPlugin: Success! (with a redirect button)
+```
