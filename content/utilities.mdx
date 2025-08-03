@@ -61,14 +61,14 @@ some_java_object.setCallback(callback)
 ### `zwylib.copy_to_clipboard`
 
 ```python
-zwylib.copy_to_clipboard(bulletin_helper: Optional[_BulletinHelper], text_to_copy: str) -> None
+zwylib.copy_to_clipboard(bulletin_helper: Optional[BulletinHelper], text_to_copy: str) -> None
 ```
 
 Copies the provided text to the clipboard and displays a "Copied to clipboard" bulletin if successful and a `BulletinHelper` is provided.
 
 **Arguments**
 
-- `bulletin_helper` (`Optional[_BulletinHelper]`): Instance of a bulletin helper to show the success message. If `None`, no bulletin is shown.
+- `bulletin_helper` (`Optional[[BulletinHelper](https://plugins.exteragram.app/docs/bulletin-helper)]`): Instance of a bulletin helper to show the success message. If `None`, no bulletin is shown.
 - `text_to_copy` (`str`): Text to copy to the clipboard.
 
 **Returns**
@@ -99,7 +99,7 @@ Downloads a plugin file from a message's document and installs it using the `Plu
 - `plugin_id` (`str`): Identifier of the plugin to install.
 - `max_tries` (`int`, default `10`): Must not be set manually. Maximum tries of plugin downloading.
 - `is_queued` (`bool`, default `False`): Must not be set manually. Indicates whether the function is called as part of a queued retry.
-- `current_try` (`bool`, default `False`): Must not be set manually. Current plugin download try.
+- `current_try` (`int`, default `0`): Must not be set manually. Current plugin download try.
 
 **Example**
 
